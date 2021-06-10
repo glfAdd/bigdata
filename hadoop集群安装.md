@@ -6,6 +6,16 @@
 --hostname 指定主机名字
 ```
 
+##### 文档
+
+```
+官网文档
+http://hadoop.apache.org/docs/
+
+底版本中文文档
+http://hadoop.apache.org/docs/r1.0.4/cn/cluster_setup.html
+```
+
 ## 使用 docker 安装 centos
 
 ##### 查看docker所有网络类型
@@ -52,10 +62,10 @@ Docker的设计理念是在容器里面不运行后台服务
 # yum clean all
 # yum makecache
 # yum update
-# yum install -y vim net-tools passwd
+# yum install -y vim net-tools passwd sudo git zsh htop tree telnet telnet-server iotop
 ```
 
-##### 安装 ssh 服务
+##### 安装 ssh 
 
 - 安装
 
@@ -82,6 +92,11 @@ Could not load host key: /etc/ssh/ssh_host_ed25519_key
 
 ```
 创建 authorized_keys 文件, 添加公钥
+
+
+如果仍然无法登录需要修改该文件权限
+chmod 644 ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
 ```
 
 - 编写容器的服务启动脚本
@@ -98,6 +113,76 @@ Could not load host key: /etc/ssh/ssh_host_ed25519_key
   ```bash
   chmod +x /run.sh
   ```
+
+- 生成密钥对
+
+```bash
+ssh-keygen -t rsa 
+```
+
+- 会将本机的公钥发送到要访问计算机, 存储在 ~/.ssh/authorized_keys
+
+```
+ssh-copy-id centos101
+```
+
+##### 创建新用户
+
+```bash
+# adduser xxx
+# passwd xxx
+```
+
+##### 关闭防火墙
+
+```
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+```
+
+##### 普通用户无法使用 sudo 命令
+
+```
+gladd is not in the sudoers file.  This incident will be reported
+
+1. 添加sudoers文件的写权限, /etc/sudoers文件默认是只读的
+chmod u+w /etc/sudoers
+
+
+2. 编辑文件 /etc/sudoers
+## Allow root to run any commands anywhere 
+root    ALL=(ALL)       ALL
+gong    ALL=(ALL)       ALL
+
+## Same thing without a password
+# %wheel        ALL=(ALL)       NOPASSWD: ALL
+gong    ALL=(ALL)       NOPASSWD: ALL
+
+
+3. 撤销sudoers文件写权限,命令:
+chmod u-w /etc/sudoers
+```
+
+##### 安装 oh my zsh
+
+- 域名解析修改 hosts
+
+```
+1. https://www.ipaddress.com/ 查询域名 raw.githubusercontent.com 的 ip 为 185.199.108.133
+
+
+2. 修改hosts文件 添加:
+185.199.108.133 raw.githubusercontent.com
+```
+
+- 安装
+
+```
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+或
+sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+主题
+```
 
 ##### 将容器 commit 为新的镜像
 
@@ -124,7 +209,7 @@ $ docker run --net hadoopnetwork --ip 172.20.0.102 -itd --name centos102 --hostn
 $ docker run --net hadoopnetwork --ip 172.20.0.103 -itd --name centos103 --hostname centos103 centos:glfadd_base /run.sh
 ```
 
-##### 设置每个集群的 hosts 文件
+##### 修改 hosts 文件
 
 ```
 172.20.0.101 centos101
@@ -132,23 +217,11 @@ $ docker run --net hadoopnetwork --ip 172.20.0.103 -itd --name centos103 --hostn
 172.20.0.103 centos103
 ```
 
-##### docker创建快照
-
-```
-
-```
-
-##### docker引用快照
-
-```
-
-```
-
 ##### 安装 jdk 8 和 hadoop
 
 ```
 1. 官网 https://www.oracle.com/java/technologies/javase-downloads.html 下载 jdk-8u291-linux-x64.tar.gz
-
+wget https://download.oracle.com/otn/java/jdk/8u291-b10/d7fc238d0cbf4b0dac67be84580cfb4b/jdk-8u291-linux-x64.tar.gz?AuthParam=1622798508_591a13ca10b5a996d1b64f9623feadd5
 
 2. 官网 https://hadoop.apache.org/releases.html 下载 hadoop https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-3.2.2/hadoop-3.2.2.tar.gz
 
@@ -179,11 +252,300 @@ hadoop version
 
 ##### hadoop目录
 
+| 目录  | 说明                                            |
+| ----- | ----------------------------------------------- |
+| bin   | 存放对Hadoop相关服务（HDFS,YARN）进行操作的脚本 |
+| sbin  | 存放启动或停止Hadoop相关服务的脚本              |
+| etc   | Hadoop的配置文件目录，存放Hadoop的配置文件      |
+| lib   | 存放Hadoop的本地库（对数据进行压缩解压缩功能）  |
+| share | 存放Hadoop的依赖jar包、文档、和官方案例         |
+
+## 配置 hadoop
+
+> 目录 /opt/hadoop-3.2.2/etc/hadoop
+
+##### 集群分配
+
+- 原则
+
 ```
-bin目录：存放对Hadoop相关服务（HDFS,YARN）进行操作的脚本
-etc目录：Hadoop的配置文件目录，存放Hadoop的配置文件
-lib目录：存放Hadoop的本地库（对数据进行压缩解压缩功能）
-sbin目录：存放启动或停止Hadoop相关服务的脚本
-share目录：存放Hadoop的依赖jar包、文档、和官方案例
+NameNode和SecondaryNameNode不要安装在同一台服务器
+ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置在同一台机器上。
 ```
+
+##### core-site.xml (核心配置文件)
+
+| 参数           | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| fs.defaultFS   | NameNode的URI                                                |
+| hadoop.tmp.dir | Hadoop的默认临时路径. hadoop.tmp.dir是hadoop文件系统依赖的基础配置，很多路径都依赖它。它默认的位置是在/tmp/{$user}下面，但是在/tmp路径下的存储是不安全的，因为linux一次重启，文件就可能被删除 |
+
+
+
+````xml
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://centos101:8020</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/opt/hadoop-3.2.2/data</value>
+    </property>
+</configuration>
+
+````
+
+##### hdfs-site.xml
+
+ ```xml
+ <configuration>
+     <property>
+         <name>dfs.namenode.name.dir</name>
+         <value>file://${hadoop.tmp.dir}/name</value>
+     </property>
+     <property>
+         <name>dfs.namenode.checkpoint.dir</name>
+         <value>file://${hadoop.tmp.dir}/namesecondary</value>
+     </property>
+     <property>
+         <name>dfs.datanode.name.dir</name>
+         <value>file://${hadoop.data.dir}/data</value>
+     </property>
+     <property>
+         <name>dfs.namenode.secondary.http-address</name>
+         <value>centos103:9868</value>
+     </property>
+ </configuration>
+ 
+ ```
+
+##### yarn-site.xml
+
+| 参数                                | 说明                                   |
+| ----------------------------------- | -------------------------------------- |
+| yarn.nodemanager.aux-services       | nomenodeManager获取数据的方式是shuffle |
+| yarn.resourcemanager.hostname       | 指定Yarn的老大(ResourceManager)的地址  |
+| yarn.log-aggregation-enable         | 开启日志聚集功能                       |
+| yarn.log-aggregation.retain-seconds | 日志保存时间                           |
+| yarn.log.server.url                 | 日志服务器地址                         |
+
+
+
+```xml
+<configuration>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.hostname</name>
+        <value>centos102</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.env-whitelist</name>
+        <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.log.server.url</name>
+        <value>http://centos101/jobhistory/logs</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation.retain-seconds</name>
+        <value>604800</value>
+    </property>
+</configuration>
+
+```
+
+
+
+##### mapres-site.xml
+
+| 参数                                | 说明                |
+| ----------------------------------- | ------------------- |
+| mapreduce.jobhistory.address        | 历史服务器端地址    |
+| mapreduce.jobhistory.webapp.address | 历史服务器web端地址 |
+
+
+
+```xml
+<configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>centos103:10020</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>centos103:19888</value>
+    </property>
+</configuration>
+```
+
+##### workers
+
+- 该文件中添加的内容结尾不允许有空格，文件中不允许有空行
+
+```xml
+centos101
+centos102
+centos103
+```
+
+##### xsync 集群分发脚本
+
+- 创建脚本 xsync.sh
+
+```shell
+#!/bin/bash
+#1. 判断参数个数
+if [ $# -lt 1 ]
+then
+	echo Not Enough Arguement!
+	exit;
+fi
+#2. 遍历集群所有机器
+for host in centos101 centos102 centos103
+do
+	echo ====================  $host  ====================
+	#3. 遍历所有目录，挨个发送
+	for file in $@
+	do
+		#4 判断文件是否存在
+		if [ -e $file ]
+		then
+			#5. 获取父目录
+			pdir=$(cd -P $(dirname $file); pwd)
+			#6. 获取当前文件的名称
+			fname=$(basename $file)
+			ssh $host "mkdir -p $pdir"
+			rsync -av $pdir/$fname $host:$pdir
+		else
+			echo $file does not exists!
+		fi
+	done
+done
+```
+
+- 使用
+
+```bash
+# 修改权限
+chmod +x xsync
+
+# 将脚本移动到/bin中，以便全局调用
+sudo mv xsync /bin/
+
+# 测试脚本
+sudo xsync /bin/xsync
+
+# 使用
+xsync /opt/a.txt
+```
+
+##### 启动集群
+
+- 如果集群是第一次启动需要先格式化 NameNode (使用centos101 NN)
+- 格式化之前，一定要先停止上次启动的所有namenode和datanode进程，然后再删除data和log数据
+
+```
+/opt/hadoop-3.2.2/sbin/stop-all.sh
+
+# 集群中的所有机器都会启动
+
+1. 格式化 (centos101配置了namenode的节点上运行)
+hdfs namenode -format
+
+2. 启动HDFS (centos101配置了namenode的节点上运行)
+/opt/hadoop-3.2.2/sbin/start-dfs.sh
+
+3. 在配置了ResourceManager的节点（centos102）启动YARN
+/opt/hadoop-3.2.2/sbin/start-yarn.sh
+
+5. 启动历史服务器 (centos103)
+mapred --daemon start historyserver
+```
+
+##### 查看集群 jps 脚本
+
+```shell
+#!/bin/bash
+for i in centos101 centos102 centos103; do
+	echo "========= $i =========="
+	ssh $i "jps" | grep -v Jps
+done
+```
+
+##### 集群状态查看
+
+- 使用web
+
+```
+http://centos102:8088/cluster
+http://centos101:9870
+```
+
+
+
+```
+[gong@centos101 ~]$ hdfs fsck /
+Connecting to namenode via http://centos101:9870/fsck?ugi=gong&path=%2F
+FSCK started by gong (auth:SIMPLE) from /172.20.0.101 for path / at Sun May 30 02:45:08 UTC 2021
+
+
+Status: HEALTHY //集群状态健康
+ Number of data-nodes:	3 //集群有多少数据节点
+ Number of racks:		1 //集群有多少机架
+ Total dirs:			1 //集群有多少个目录
+ Total symlinks:		0 //集群有多少链接
+
+Replicated Blocks:
+ Total size:	0 B //集群总共文件大小
+ Total files:	0 //集群有多少个文件
+ Total blocks (validated):	0  //多少个数据块  通过验证的有2块  平均块大小是27xxx
+ Minimally replicated blocks:	0 //最少复制的块数
+ Over-replicated blocks:	0 //超过预计复制数目的块有几个（比如说 多备份了1个副本）
+ Under-replicated blocks:	0 // 少于预计复制数目的块有几个（比如说 3副本少备份了1个副本）
+ Mis-replicated blocks:		0 //没备份的块有几个
+ Default replication factor:	3 //备份因子为1  每个数据块给1个备份
+ Average block replication:	0.0  //平均备份数目，1个备份
+ Missing blocks:		0
+ Corrupt blocks:		0
+ Missing replicas:		0
+
+Erasure Coded Block Groups:
+ Total size:	0 B
+ Total files:	0
+ Total block groups (validated):	0
+ Minimally erasure-coded block groups:	0
+ Over-erasure-coded block groups:	0
+ Under-erasure-coded block groups:	0
+ Unsatisfactory placement block groups:	0
+ Average block group size:	0.0
+ Missing block groups:		0
+ Corrupt block groups:		0
+ Missing internal blocks:	0
+FSCK ended at Sun May 30 02:45:08 UTC 2021 in 9 milliseconds
+
+
+The filesystem under path '/' is HEALTHY
+```
+
+##### 测试集群
+
+```
+
+
+
+```
+
+
 
