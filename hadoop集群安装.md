@@ -163,7 +163,7 @@ gong    ALL=(ALL)       NOPASSWD: ALL
 chmod u-w /etc/sudoers
 ```
 
-##### 安装 oh my zsh
+##### 安装 oh my zsh(影响环境变量, 不安装)
 
 - 域名解析修改 hosts
 
@@ -179,9 +179,6 @@ chmod u-w /etc/sudoers
 
 ```
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-或
-sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
-主题
 ```
 
 ##### 将容器 commit 为新的镜像
@@ -489,7 +486,10 @@ done
 - 使用web
 
 ```
+yarn的web管理界面
 http://centos102:8088/cluster
+
+hdfs的web管理页面
 http://centos101:9870
 ```
 
@@ -539,19 +539,11 @@ FSCK ended at Sun May 30 02:45:08 UTC 2021 in 9 milliseconds
 The filesystem under path '/' is HEALTHY
 ```
 
-##### 测试集群
-
-```
-
-
-
-```
-
-## mysql 安装
+## mysql
 
 > 官网: https://dev.mysql.com/downloads/mysql/
 
-##### 编译安装(失败)
+##### 编译安装(失败,)
 
 ```
 $ wget https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz
@@ -573,7 +565,7 @@ cmake
 
 - 下载
 
-  ```
+  ```c
   选择最小安装
   $ wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
   $ tar -Jxvf mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
@@ -769,23 +761,226 @@ cmake
   $ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock
   ```
 
-  
-  
-  > https://www.yanghaihua.com/content/2019-03-26/1032.shtml
-  >
-  > 
+- 生成软链接 (未使用)
 
-```
-生成软链接
+```bash
 # cd /usr/local
 # ln -s /opt/mysql-8.0.20-linux-x86_64-minimal mysql
 ```
 
+## Hive
+
+##### hive 安装
+
+```bash
+1. 下载解压到docker /opt目录下
+$ wget https://mirrors.bfsu.edu.cn/apache/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz
 
 
+2. 设置环境变量
+export HIVE_HOME=/opt/apache-hive-3.1.2-bin
+export PATH=$PATH:$HIVE_HOME/bin
+```
+
+##### Hive元数据配置到MySql
+
+- 下载 MySQL 对应版本的 JDBC 
+
+```bash
+官网: https://dev.mysql.com/downloads/connector/j/
+选择 "Platform Independent (Architecture Independent), Compressed TAR Archive"
+
+$ wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.tar.gz
+
+将版本对应的JDBC驱动 mysql-connector-java-8.0.25.jar 拷贝到Hive的lib目录下
+```
+
+- 在$HIVE_HOME/conf目录下新建hive-site.xml文件
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration> 
+  <property> 
+    <name>javax.jdo.option.ConnectionURL</name>  
+    <value>jdbc:mysql://centos101:3306/metastore?useSSL=false</value> 
+  </property>  
+  <property> 
+    <name>javax.jdo.option.ConnectionDriverName</name>  
+    <value>com.mysql.jdbc.Driver</value> 
+  </property>  
+  <property> 
+    <name>javax.jdo.option.ConnectionUserName</name>  
+    <value>root</value> 
+  </property>  
+  <property> 
+    <name>javax.jdo.option.ConnectionPassword</name>  
+    <value>123456</value> 
+  </property>  
+  <property> 
+    <name>hive.metastore.warehouse.dir</name>  
+    <value>/user/hive/warehouse</value> 
+  </property>  
+  <property> 
+    <name>hive.metastore.schema.verification</name>  
+    <value>false</value> 
+  </property>  
+  <property> 
+    <name>hive.metastore.uris</name>  
+    <value>thrift://centos101:9083</value> 
+  </property>  
+  <property> 
+    <name>hive.server2.thrift.port</name>  
+    <value>10000</value> 
+  </property>  
+  <property> 
+    <name>hive.server2.thrift.bind.host</name>  
+    <value>centos101</value> 
+  </property>  
+  <property> 
+    <name>hive.metastore.event.db.notification.api.auth</name>  
+    <value>false</value> 
+  </property> 
+</configuration>
+```
+
+##### 安装 tez 引擎
+
+> hive有三种引擎：mapreduce、spark、tez，默认引擎为MapReduce，但MapReduce的计算效率非常低，而Spark和Tez引擎效率高，公司一般会使用Spark或Tez作为hive的引擎。
+>
+> 官网: http://tez.apache.org/
+> 下载地址: https://mirrors.bfsu.edu.cn/apache/tez/
+
+```bash
+# 下载解压到本地
+$ wget https://mirrors.bfsu.edu.cn/apache/tez/0.10.0/apache-tez-0.10.0-bin.tar.gz
+$ tar zxvf apache-tez-0.10.0-bin.tar.gz
+
+# 上传到 hdfs 中
+$ hadoop fs -mkdir /tez
+$ hadoop fs -put /opt/apache-tez-0.10.0-bin.tar.gz /tez
+```
+
+- 新建 $HADOOP_HOME/etc/hadoop/tez-site.xml 文件
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration> 
+  <property> 
+    <name>tez.lib.uris</name>  
+    <value>${fs.defaultFS}/tez/tez-0.10.1-SNAPSHOT.tar.gz</value> 
+  </property>  
+  <property> 
+    <name>tez.use.cluster.hadoop-libs</name>  
+    <value>true</value> 
+  </property>  
+  <property> 
+    <name>tez.am.resource.memory.mb</name>  
+    <value>1024</value> 
+  </property>  
+  <property> 
+    <name>tez.am.resource.cpu.vcores</name>  
+    <value>1</value> 
+  </property>  
+  <property> 
+    <name>tez.container.max.java.heap.fraction</name>  
+    <value>0.4</value> 
+  </property>  
+  <property> 
+    <name>tez.task.resource.memory.mb</name>  
+    <value>1024</value> 
+  </property>  
+  <property> 
+    <name>tez.task.resource.cpu.vcores</name>  
+    <value>1</value> 
+  </property> 
+</configuration>
+```
+
+- 新建 $HADOOP_HOME/etc/hadoop/shellprofile.d/tez.sh 添加Tez的Jar包相关信息
+
+```
+hadoop_add_profile tez
+function _tez_hadoop_classpath
+{
+    hadoop_add_classpath "$HADOOP_HOME/etc/hadoop" after
+    hadoop_add_classpath "/opt/apache-tez-0.10.0-bin/*" after
+    hadoop_add_classpath "/opt/apache-tez-0.10.0-bin/lib/*" after
+}
+```
+
+- 修改Hive的计算引擎, 编辑 $HIVE_HOME/conf/hive-site.xml 添加
+
+```
+<property>
+    <name>hive.execution.engine</name>
+    <value>tez</value>
+</property>
+<property>
+    <name>hive.tez.container.size</name>
+    <value>1024</value>
+</property>
+```
+
+- 解决日志Jar包冲突
+
+```
+$ mv /opt/module/tez/lib/slf4j-log4j12-1.7.10.jar /opt/module/tez/lib/slf4j-log4j12-1.7.10.jar.bak
+```
+
+##### 验证是否安装成功
+
+```
+hive --help
+```
+
+##### 初始化元数据库
+
+```
+1. 登陆MySQL
+
+2. 新建Hive元数据库
+mysql> create database metastore;
+mysql> quit;
+
+3. 初始化Hive元数据库
+$ schematool -initSchema -dbType mysql -verbose
+```
+
+##### 启动
+
+```
+# 启动metastore
+nohup hive --service metastore >$HIVE_HOME/logs/metastore.log 2>&1 &
+hdfs dfsadmin -safemode wait >/dev/null 2>&1
+
+# 启动hiveserver2
+nohup hive --service hiveserver2 >$HIVE_HOME/logs/hiveServer2.log 2>&1 &
 
 
-## Hive 安装
+```
+
+##### 问题1: 启动时报错
+
+```
+报错信息:
+Exception in thread "main" java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)
+
+原因:
+是系统找不到相关jar包或同一类型的jar包有不同版本存在，系统无法决定使用哪一个。
+
+解决办法:
+删除hive中低版本的guava包，把hadoop里的复制到hive的lib目录下即可。
+
+$ cd /opt/apache-hive-3.1.2-bin/lib
+$ mv guava-19.0.jar guava-19.0.jar.bak
+$ cp /opt/hadoop-3.2.2/share/hadoop/common/lib/guava-27.0-jre.jar .
+```
+
+
 
 
 
