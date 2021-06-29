@@ -1,3 +1,25 @@
+##### 集群状态查看
+
+```
+========= centos101 =======
+7632 NodeManager
+8338 Bootstrap
+6935 NameNode
+7964 RunJar
+7087 DataNode
+7487 ApplicationHistoryServer
+8127 RunJar
+========= centos102 =======
+5266 NodeManager
+4876 DataNode
+5119 ResourceManager
+========= centos103 =======
+5762 SecondaryNameNode
+5541 DataNode
+5644 JobHistoryServer
+5916 NodeManager
+```
+
 ##### docker 参数说明
 
 ```
@@ -238,7 +260,7 @@ export JAVA_HOME=/opt/jdk1.8.0_291
 export PATH=$PATH:$JAVA_HOME/bin
 
 
-5. 是配置生效
+5. 使配置生效
 source /etc/profile
 
 
@@ -266,15 +288,15 @@ hadoop version
 - 原则
 
 ```
-NameNode和SecondaryNameNode不要安装在同一台服务器
-ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置在同一台机器上。
+NameNode 和 SecondaryNameNode不要安装在同一台服务器
+ResourceManager 也很消耗内存，不要和NameNode、SecondaryNameNode配置在同一台机器上。
 ```
 
 ##### core-site.xml (核心配置文件)
 
 | 参数           | 说明                                                         |
 | -------------- | ------------------------------------------------------------ |
-| fs.defaultFS   | NameNode的URI                                                |
+| fs.defaultFS   | NameNode 的URI                                               |
 | hadoop.tmp.dir | Hadoop的默认临时路径. hadoop.tmp.dir是hadoop文件系统依赖的基础配置，很多路径都依赖它。它默认的位置是在/tmp/{$user}下面，但是在/tmp路径下的存储是不安全的，因为linux一次重启，文件就可能被删除 |
 
 
@@ -289,8 +311,19 @@ ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置�
         <name>hadoop.tmp.dir</name>
         <value>/opt/hadoop-3.2.2/data</value>
     </property>
+    <property>
+        <name>hadoop.proxyuser.gong.hosts</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.proxyuser.gong.groups</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.http.staticuser.user</name>
+        <value>gong</value>
+    </property>
 </configuration>
-
 ````
 
 ##### hdfs-site.xml
@@ -314,7 +347,6 @@ ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置�
          <value>centos103:9868</value>
      </property>
  </configuration>
- 
  ```
 
 ##### yarn-site.xml
@@ -355,11 +387,75 @@ ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置�
         <name>yarn.log-aggregation.retain-seconds</name>
         <value>604800</value>
     </property>
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.log.server.url</name>
+        <value>http://${yarn.timeline-service.webapp.address}/applicationhistory/logs</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation.retain-seconds</name>
+        <value>604800</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.hostname</name>
+        <value>${yarn.resourcemanager.hostname}</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.http-cross-origin.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.system-metrics-publisher.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.hostname</name>
+        <value>centos101</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.http-cross-origin.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name> yarn.resourcemanager.system-metrics-publisher.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.generic-application-history.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <description>Address for the Timeline server to start the RPC server.</description>
+        <name>yarn.timeline-service.address</name>
+        <value>centos101:10201</value>
+    </property>
+    <property>
+        <description>The http address of the Timeline service web application.</description>
+        <name>yarn.timeline-service.webapp.address</name>
+        <value>centos101:8188</value>
+    </property>
+    <property>
+        <description>The https address of the Timeline service web application.</description>
+        <name>yarn.timeline-service.webapp.https.address</name>
+        <value>centos101:2191</value>
+    </property>
+    <property>
+        <name>yarn.timeline-service.handler-thread-count</name>
+        <value>24</value>
+    </property>
 </configuration>
-
 ```
-
-
 
 ##### mapres-site.xml
 
@@ -376,10 +472,12 @@ ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置�
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
     </property>
+    <!-- 历史服务器端地址 -->
     <property>
         <name>mapreduce.jobhistory.address</name>
         <value>centos103:10020</value>
     </property>
+    <!-- 历史服务器web端地址 -->
     <property>
         <name>mapreduce.jobhistory.webapp.address</name>
         <value>centos103:19888</value>
@@ -389,12 +487,20 @@ ResourceManager也很消耗内存，不要和NameNode、SecondaryNameNode配置�
 
 ##### workers
 
-- 该文件中添加的内容结尾不允许有空格，文件中不允许有空行
+- /opt/hadoop-3.2.2/etc/hadoop/workers 添加如下内容, 文件中不允许有空行
 
 ```xml
 centos101
 centos102
 centos103
+```
+
+##### 集群时间同步
+
+```
+
+
+
 ```
 
 ##### xsync 集群分发脚本
@@ -448,12 +554,24 @@ sudo xsync /bin/xsync
 xsync /opt/a.txt
 ```
 
-##### 启动集群
+##### 查看集群 jps 脚本
+
+```shell
+#!/bin/bash
+for i in centos101 centos102 centos103; do
+	echo "========= $i =========="
+	ssh $i "jps" | grep -v Jps
+done
+```
+
+##### 集群启动方式1
+
+> 需要配置好ssh
 
 - 如果集群是第一次启动需要先格式化 NameNode (使用centos101 NN)
 - 格式化之前，一定要先停止上次启动的所有namenode和datanode进程，然后再删除data和log数据
 
-```
+```bash
 /opt/hadoop-3.2.2/sbin/stop-all.sh
 
 # 集群中的所有机器都会启动
@@ -469,16 +587,20 @@ hdfs namenode -format
 
 5. 启动历史服务器 (centos103)
 mapred --daemon start historyserver
+
+6. 启动 Timelineserver (centos101)
+yarn --daemon start timelineserver
+
 ```
 
-##### 查看集群 jps 脚本
+##### 集群启动方式2
 
-```shell
-#!/bin/bash
-for i in centos101 centos102 centos103; do
-	echo "========= $i =========="
-	ssh $i "jps" | grep -v Jps
-done
+```bash
+1. 各个服务组件逐一启动/停止
+# 分别启动/停止HDFS组件
+$ hdfs --daemon start/stop namenode/datanode/secondarynamenode
+# 启动/停止YARN
+$ yarn --daemon start/stop  resourcemanager/nodemanager
 ```
 
 ##### 集群状态查看
@@ -489,11 +611,27 @@ done
 yarn的web管理界面
 http://centos102:8088/cluster
 
+
 hdfs的web管理页面
 http://centos101:9870
+
+
+查看日志
+http://centos103:19888/jobhistory
+
+
+Web端查看SecondaryNameNode(不好用)
+http://centos103:9868/status.html
+
+
+日志服务器地址
+http://centos103:19888/jobhistory
+
+
+
 ```
 
-
+- 使用命令
 
 ```
 [gong@centos101 ~]$ hdfs fsck /
@@ -539,59 +677,48 @@ FSCK ended at Sun May 30 02:45:08 UTC 2021 in 9 milliseconds
 The filesystem under path '/' is HEALTHY
 ```
 
-## mysql
+## mysql (二进制安装)
 
 > 官网: https://dev.mysql.com/downloads/mysql/
 
-##### 编译安装(失败,)
+##### 创建用户
 
 ```
-$ wget https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz
-$ xz -d mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz
-$ tar xf mysql-8.0.24-linux-glibc2.12-x86_64.tar 
-
-
-cmake
+groupadd mysql
+useradd mysql -g mysql -s /sbin/nologin
 ```
 
-##### 二进制安装
+#####  下载
 
-- 创建用户
+```
+选择最小安装
+$ wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
+$ tar -Jxvf mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
+$ cd mysql-8.0.25-linux-glibc2.17-x86_64-minimal
+```
 
-  ```
-  groupadd mysql
-  useradd mysql -g mysql -s /sbin/nologin
-  ```
+##### 创建文件修改该权限
 
-- 下载
+```bash
+$ mkdir data
+$ mkdir 3306
+$ chmod 755 -R data 
+$ chmod 755 -R 3306 
+$ sudo chown -R mysql:mysql data
+$ sudo chown -R mysql:mysql 3306 
+```
 
-  ```c
-  选择最小安装
-  $ wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
-  $ tar -Jxvf mysql-8.0.25-linux-glibc2.17-x86_64-minimal.tar.xz
-  $ cd mysql-8.0.25-linux-glibc2.17-x86_64-minimal
-  ```
+##### 设置配置文件
 
-- 创建文件修改该权限
+- 创建文件
 
-  ```
-  $ mkdir data
-  $ mkdir 3306
-  $ chmod 755 -R data 
-  $ chmod 755 -R 3306 
-  $ sudo chown -R mysql:mysql data
-  $ sudo chown -R mysql:mysql 3306 
-  ```
-
-- 设置配置文件
-
-  ```
+  ```bash
   $ mkdir config && cd config
   ```
-  
+
+- config 下创建 my.cnf 文件
+
   ```
-  # config 下创建 my.cnf 文件
-  
   [client]
   port = 3306
   socket = /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock
@@ -670,62 +797,61 @@ cmake
   innodb_lock_wait_timeout=50
   innodb_file_per_table=1 #独立表空间
   ```
-  
-- 初始化
 
-  ```bash
-  方式1: 使用配置文件, 文件中生成随机密码
-  $ bin/mysqld --defaults-file=config/my.cnf --user=mysql --initialize
-  
-  密码在 3306/mysql.err 文件中
-  2021-06-21T07:58:23.251821Z 6 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: 2p<hp3:CHjXj
-  
-  
-  方式2: 参数 --initialize-insecure 设置空密码 (使用这个)
-  $ bin/mysqld --defaults-file=config/my.cnf --user=mysql --initialize-insecure 
-  
-  
-  方式3: 参数设置目录
-  $ bin/mysqld --user=mysql  --initialize --basedir=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal --datadir=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/data
+##### 初始化
+
+```
+方式1: 使用配置文件, 文件中生成随机密码
+$ bin/mysqld --defaults-file=config/my.cnf --user=mysql --initialize
+
+密码在 3306/mysql.err 文件中
+2021-06-21T07:58:23.251821Z 6 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: 2p<hp3:CHjXj
+
+
+方式2: 参数 --initialize-insecure 设置空密码 (使用这个)
+$ bin/mysqld --defaults-file=config/my.cnf --user=mysql --initialize-insecure 
+
+
+方式3: 参数设置目录
+$ bin/mysqld --user=mysql  --initialize --basedir=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal --datadir=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/data
+```
+
+##### 启动服务
+
+```
+$ /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/bin/mysqld_safe --defaults-file=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/config/my.cnf &
+```
+
+##### 首次登录修改密码
+
+```
+$ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock
+
+# 修改密码
+alter user 'root'@'localhost' identified by '123456';
+```
+
+##### 登录
+
+```
+$ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock -p
+```
+
+##### 允许外网访问
+
+```
+use mysql;
+select host,user from user;
+update user set host='%' where user='root';
+flush privileges;
+select host,user from user;
+```
+
+##### 使用中问题
+
+- 问题: 初始化问题
+
   ```
-
-- 启动服务
-
-  ```
-  $ bin/mysqld_safe --defaults-file=config/my.cnf &
-  ```
-
-- 首次登录修改密码
-
-  ```bash
-  $ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock
-  
-  # 修改密码
-  alter user 'root'@'localhost' identified by '123456';
-  ```
-
-- 登录
-
-  ```bash
-  $ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock -p
-  ```
-  
-- 允许外网访问
-
-  ```
-  use mysql
-  select host,user from user;
-  update user set host='%' where user='root';
-  flush privileges;
-  select host,user from user;
-  ```
-
-- 问题1
-
-  ```
-  问题: 
-  初始化问题
-  
   错误信息:
   ./mysqld: error while loading shared libraries: libaio.so.1: cannot open shared object file: No such file or directory
   
@@ -733,13 +859,10 @@ cmake
   centos: yum install numactl
   ubuntu: aptitude install libaio1 libaio-dev
   ```
-
-- 问题2
+  
+- 问题: mysql 启动问题
 
   ```
-  问题: 
-  mysql 启动问题
-  
   错误信息:
   ./mysql: error while loading shared libraries: libncurses.so.5: cannot open shared object file: No such file or directory
   
@@ -748,12 +871,9 @@ cmake
   aptitude install libncurses5
   ```
   
-- 问题3
+- 问题: 客户端服务链接mysql
 
   ```
-  问题:
-  客户端服务链接mysql
-  
   错误信息:
   ERROR 1045 (28000): Access denied for user 'glfadd'@'localhost' (using password: NO)
   
@@ -761,14 +881,16 @@ cmake
   $ bin/mysql -uroot -S /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/3306/mysql.sock
   ```
 
-- 生成软链接 (未使用)
+##### 生成软链接 (未使用)
 
 ```bash
-# cd /usr/local
-# ln -s /opt/mysql-8.0.20-linux-x86_64-minimal mysql
+$ cd /usr/local
+$ ln -s /opt/mysql-8.0.20-linux-x86_64-minimal mysql
 ```
 
 ## Hive
+
+> hive 元数据存储在 mysql 中, mysql 必须先运行
 
 ##### hive 安装
 
@@ -777,12 +899,20 @@ cmake
 $ wget https://mirrors.bfsu.edu.cn/apache/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz
 
 
-2. 设置环境变量
+2. 设置环境变量, 编辑 /etc/profile.d/my_env.sh 文件
 export HIVE_HOME=/opt/apache-hive-3.1.2-bin
 export PATH=$PATH:$HIVE_HOME/bin
+
+
+3. 使配置生效
+source /etc/profile
+
+
+4. 解决日志Jar包冲突
+$ mv $HIVE_HOME/lib/log4j-slf4j-impl-2.10.0.jar $HIVE_HOME/lib/log4j-slf4j-impl-2.10.0.jar.bak
 ```
 
-##### Hive元数据配置到MySql
+##### hive 元数据配置到MySql
 
 - 下载 MySQL 对应版本的 JDBC 
 
@@ -792,12 +922,23 @@ export PATH=$PATH:$HIVE_HOME/bin
 
 $ wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.tar.gz
 
-将版本对应的JDBC驱动 mysql-connector-java-8.0.25.jar 拷贝到Hive的lib目录下
+将版本对应的JDBC驱动 mysql-connector-java-8.0.25.jar 拷贝到 $HIVE_HOME/lib 目录下
 ```
 
-- 在$HIVE_HOME/conf目录下新建hive-site.xml文件
+- 数据在hdfs中的存储位置
 
+```bash
+$ hdfs dfs -mkdir -p /usr/hive/warehouse
+$ hdfs dfs -mkdir -p /usr/hive/tmp
+$ hdfs dfs -mkdir -p /usr/hive/log
+$ hdfs dfs -chmod g+w /usr/hive/warehouse
+$ hdfs dfs -chmod g+w /usr/hive/tmp
+$ hdfs dfs -chmod g+w /usr/hive/log
 ```
+
+- 在 $HIVE_HOME/conf 目录下新建 hive-site.xml 文件
+
+```xml
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
@@ -820,7 +961,7 @@ $ wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.
   </property>  
   <property> 
     <name>hive.metastore.warehouse.dir</name>  
-    <value>/user/hive/warehouse</value> 
+    <value>/usr/hive/warehouse</value> 
   </property>  
   <property> 
     <name>hive.metastore.schema.verification</name>  
@@ -845,33 +986,38 @@ $ wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.
 </configuration>
 ```
 
-##### 安装 tez 引擎
+## 安装 tez 引擎
 
 > hive有三种引擎：mapreduce、spark、tez，默认引擎为MapReduce，但MapReduce的计算效率非常低，而Spark和Tez引擎效率高，公司一般会使用Spark或Tez作为hive的引擎。
 >
 > 官网: http://tez.apache.org/
 > 下载地址: https://mirrors.bfsu.edu.cn/apache/tez/
 
+##### 下载
+
 ```bash
-# 下载解压到本地
+1. 下载解压到 centos101
 $ wget https://mirrors.bfsu.edu.cn/apache/tez/0.10.0/apache-tez-0.10.0-bin.tar.gz
 $ tar zxvf apache-tez-0.10.0-bin.tar.gz
 
-# 上传到 hdfs 中
+2. 上传到 hdfs 中
 $ hadoop fs -mkdir /tez
 $ hadoop fs -put /opt/apache-tez-0.10.0-bin.tar.gz /tez
 ```
 
-- 新建 $HADOOP_HOME/etc/hadoop/tez-site.xml 文件
+##### tez-site.xml
 
-```
+> 新建 $HADOOP_HOME/etc/hadoop/tez-site.xml 文件
+
+```xml
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration> 
+  <!--指明hdfs集群上的tez的tar包，使Hadoop可以自动分布式缓存该jar包-->
   <property> 
     <name>tez.lib.uris</name>  
-    <value>${fs.defaultFS}/tez/tez-0.10.1-SNAPSHOT.tar.gz</value> 
+    <value>${fs.defaultFS}/tez/apache-tez-0.10.0-bin.tar.gz</value> 
   </property>  
   <property> 
     <name>tez.use.cluster.hadoop-libs</name>  
@@ -900,7 +1046,9 @@ $ hadoop fs -put /opt/apache-tez-0.10.0-bin.tar.gz /tez
 </configuration>
 ```
 
-- 新建 $HADOOP_HOME/etc/hadoop/shellprofile.d/tez.sh 添加Tez的Jar包相关信息
+##### tez.sh
+
+> 新建 $HADOOP_HOME/etc/hadoop/shellprofile.d/tez.sh 添加Tez的Jar包相关信息
 
 ```
 hadoop_add_profile tez
@@ -912,9 +1060,11 @@ function _tez_hadoop_classpath
 }
 ```
 
-- 修改Hive的计算引擎, 编辑 $HIVE_HOME/conf/hive-site.xml 添加
+##### hive-site.xml
 
-```
+> 修改Hive的计算引擎, 编辑 $HIVE_HOME/conf/hive-site.xml 添加
+
+```xml
 <property>
     <name>hive.execution.engine</name>
     <value>tez</value>
@@ -925,42 +1075,158 @@ function _tez_hadoop_classpath
 </property>
 ```
 
-- 解决日志Jar包冲突
+##### 解决日志Jar包冲突
 
 ```
-$ mv /opt/module/tez/lib/slf4j-log4j12-1.7.10.jar /opt/module/tez/lib/slf4j-log4j12-1.7.10.jar.bak
-```
-
-##### 验证是否安装成功
-
-```
-hive --help
+$ mv /opt/apache-tez-0.10.0-bin/lib/slf4j-log4j12-1.7.10.jar /opt/apache-tez-0.10.0-bin/lib/slf4j-log4j12-1.7.10.jar.bak
 ```
 
 ##### 初始化元数据库
 
-```
+```bash
 1. 登陆MySQL
+
 
 2. 新建Hive元数据库
 mysql> create database metastore;
 mysql> quit;
 
+
 3. 初始化Hive元数据库
 $ schematool -initSchema -dbType mysql -verbose
 ```
 
-##### 启动
+##### 设置 hive log
+
+> 日志默认放在  /tmp/gong/hive.log
 
 ```
-# 启动metastore
-nohup hive --service metastore >$HIVE_HOME/logs/metastore.log 2>&1 &
-hdfs dfsadmin -safemode wait >/dev/null 2>&1
-
-# 启动hiveserver2
-nohup hive --service hiveserver2 >$HIVE_HOME/logs/hiveServer2.log 2>&1 &
+1. 创建日志目录 
+$ mkdir logs
 
 
+2. 备份文件
+$ cp $HIVE_HOME/conf/hive-log4j2.properties.template $HIVE_HOME/conf/hive-log4j2.properties
+
+
+3. 修改 $HIVE_HOME/conf/hive-log4j2.properties 设置目录
+property.hive.log.dir = /opt/apache-hive-3.1.2-bin/logs
+```
+
+##### 启动
+
+```bash
+1. 启动metastore
+nohup hive --service metastore > $HIVE_HOME/logs/metastore.log 2>&1 &
+
+
+2. 启动hiveserver2
+nohup hive --service hiveserver2 > $HIVE_HOME/logs/hiveServer2.log2>&1 &
+```
+
+##### 验证是否安装成功
+
+```
+验证hive 是否成功
+hive --help
+
+查看是否使用tez
+hive> set hive.execution.engine;
+hive.execution.engine=tez
+```
+
+##### beeline 客户端
+
+> 可以自动补全命令
+
+```bash
+$ beeline -u jdbc:hive2://centos101:10000 -n gong
+
+
+链接成功显示
+Connecting to jdbc:hive2://centos101:10000
+Connected to: Apache Hive (version 3.1.2)
+Driver: Hive JDBC (version 3.1.2)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+Beeline version 3.1.2 by Apache Hive
+0: jdbc:hive2://centos101:10000>
+```
+
+## tez ui
+
+> https://blog.csdn.net/sinat_37690778/article/details/80594571
+>
+> https://www.jianshu.com/p/ed2675c10b94
+
+##### 下载
+
+```
+1. 下载 tomcat
+官网: https://tomcat.apache.org/download-10.cgi
+$ wget https://downloads.apache.org/tomcat/tomcat-10/v10.0.7/bin/apache-tomcat-10.0.7.zip
+
+
+2. 下载 tez-ui
+官网: https://repository.apache.org/content/repositories/releases/org/apache/tez/tez-ui/
+$ wget https://repository.apache.org/content/repositories/releases/org/apache/tez/tez-ui/0.10.0/tez-ui-0.10.0.war
+
+
+3. 在 /opt/apache-tomcat-10.0.7/webapps 下新建tez目录
+$ mkdir -p /opt/apache-tomcat-10.0.7/webapps/tez
+
+
+4. 将 tez-ui 解压到该目录下
+$ unzip tez-ui-0.9.2.war
+```
+
+##### configs.env
+
+> 编辑 /opt/apache-tomcat-10.0.7/webapps/tez/config/configs.env 文件, 去掉下面两行的注释
+
+```bash
+timeline: "http://centos101:8188",
+rm: "http://centos101:8088",
+```
+
+##### tez-site.xml
+
+> 编辑 $HADOOP_HOME/etc/hadoop/tez-site.xml 文件, 添加如下内容
+
+```xml
+<property>
+    <name>tez.history.logging.service.class</name>
+    <value>org.apache.tez.dag.history.logging.ats.ATSHistoryLoggingService</value>
+</property>
+<property>
+    <name>tez.tez-ui.history-url.base</name>
+    <value>http://centos101:8880/tez-ui/</value>
+</property>
+```
+
+##### 启动 (centos101)
+
+```
+1. 启动tomcat
+# 修改权限
+$ chmod +x -R /opt/apache-tomcat-10.0.7/bin
+$ /opt/apache-tomcat-10.0.7/bin/startup.sh
+
+
+访问界面
+http://centos101:8080/tez
+```
+
+##### 切换 hive 的引擎(临时生效)
+
+```
+# hive 的引擎切换为 MapReduce
+hive> set hive.execution.engine=mr;
+
+# hive 的引擎切换为 tez
+hive> set hive.execution.engine=tez;
+
+# 查看 hive 引擎
+hive> set hive.execution.engine;
 ```
 
 ##### 问题1: 启动时报错
@@ -969,16 +1235,25 @@ nohup hive --service hiveserver2 >$HIVE_HOME/logs/hiveServer2.log 2>&1 &
 报错信息:
 Exception in thread "main" java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)
 
+
 原因:
 是系统找不到相关jar包或同一类型的jar包有不同版本存在，系统无法决定使用哪一个。
+
 
 解决办法:
 删除hive中低版本的guava包，把hadoop里的复制到hive的lib目录下即可。
 
-$ cd /opt/apache-hive-3.1.2-bin/lib
+
+$ cd $HIVE_HOME/lib
 $ mv guava-19.0.jar guava-19.0.jar.bak
-$ cp /opt/hadoop-3.2.2/share/hadoop/common/lib/guava-27.0-jre.jar .
+$ cp $HADOOP_HOME/share/hadoop/common/lib/guava-27.0-jre.jar .
 ```
+
+
+
+
+
+
 
 
 
