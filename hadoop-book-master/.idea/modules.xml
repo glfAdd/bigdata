@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/book/book.iml" filepath="$PROJECT_DIR$/book/book.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch02-mr-intro/ch02-mr-intro.iml" filepath="$PROJECT_DIR$/ch02-mr-intro/ch02-mr-intro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch03-hdfs/ch03-hdfs.iml" filepath="$PROJECT_DIR$/ch03-hdfs/ch03-hdfs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch05-io/ch05-io.iml" filepath="$PROJECT_DIR$/ch05-io/ch05-io.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch06-mr-dev/ch06-mr-dev.iml" filepath="$PROJECT_DIR$/ch06-mr-dev/ch06-mr-dev.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch08-mr-types/ch08-mr-types.iml" filepath="$PROJECT_DIR$/ch08-mr-types/ch08-mr-types.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch09-mr-features/ch09-mr-features.iml" filepath="$PROJECT_DIR$/ch09-mr-features/ch09-mr-features.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch12-avro/ch12-avro.iml" filepath="$PROJECT_DIR$/ch12-avro/ch12-avro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch13-parquet/ch13-parquet.iml" filepath="$PROJECT_DIR$/ch13-parquet/ch13-parquet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch15-sqoop/ch15-sqoop.iml" filepath="$PROJECT_DIR$/ch15-sqoop/ch15-sqoop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch16-pig/ch16-pig.iml" filepath="$PROJECT_DIR$/ch16-pig/ch16-pig.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch17-hive/ch17-hive.iml" filepath="$PROJECT_DIR$/ch17-hive/ch17-hive.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch18-crunch/ch18-crunch.iml" filepath="$PROJECT_DIR$/ch18-crunch/ch18-crunch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch19-spark/ch19-spark.iml" filepath="$PROJECT_DIR$/ch19-spark/ch19-spark.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch20-hbase/ch20-hbase.iml" filepath="$PROJECT_DIR$/ch20-hbase/ch20-hbase.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch21-zk/ch21-zk.iml" filepath="$PROJECT_DIR$/ch21-zk/ch21-zk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ch22-case-studies/ch22-case-studies.iml" filepath="$PROJECT_DIR$/ch22-case-studies/ch22-case-studies.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hadoop-examples/hadoop-examples.iml" filepath="$PROJECT_DIR$/hadoop-examples/hadoop-examples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/root.iml" filepath="$PROJECT_DIR$/root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/snippet/snippet.iml" filepath="$PROJECT_DIR$/snippet/snippet.iml" />
+    </modules>
+  </component>
+</project>

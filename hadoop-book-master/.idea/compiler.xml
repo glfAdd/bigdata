@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="snippet" />
+        <module name="ch03-hdfs" />
+        <module name="ch22-case-studies" />
+        <module name="ch21-zk" />
+        <module name="ch16-pig" />
+        <module name="ch20-hbase" />
+        <module name="ch15-sqoop" />
+        <module name="ch12-avro" />
+        <module name="ch18-crunch" />
+        <module name="ch02-mr-intro" />
+        <module name="ch08-mr-types" />
+        <module name="ch13-parquet" />
+        <module name="common" />
+        <module name="ch05-io" />
+        <module name="ch09-mr-features" />
+        <module name="ch17-hive" />
+        <module name="ch19-spark" />
+        <module name="ch06-mr-dev" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="book" target="1.6" />
+      <module name="ch02-mr-intro" target="1.6" />
+      <module name="ch03-hdfs" target="1.6" />
+      <module name="ch05-io" target="1.6" />
+      <module name="ch06-mr-dev" target="1.6" />
+      <module name="ch08-mr-types" target="1.6" />
+      <module name="ch09-mr-features" target="1.6" />
+      <module name="ch12-avro" target="1.6" />
+      <module name="ch13-parquet" target="1.6" />
+      <module name="ch15-sqoop" target="1.6" />
+      <module name="ch16-pig" target="1.6" />
+      <module name="ch17-hive" target="1.6" />
+      <module name="ch18-crunch" target="1.6" />
+      <module name="ch19-spark" target="1.6" />
+      <module name="ch20-hbase" target="1.6" />
+      <module name="ch21-zk" target="1.6" />
+      <module name="ch22-case-studies" target="1.6" />
+      <module name="common" target="1.6" />
+      <module name="hadoop-examples" target="1.6" />
+      <module name="root" target="1.5" />
+      <module name="snippet" target="1.6" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ch02-mr-intro" options="-Xlint:unchecked" />
+      <module name="ch03-hdfs" options="-Xlint:unchecked" />
+      <module name="ch05-io" options="-Xlint:unchecked" />
+      <module name="ch06-mr-dev" options="-Xlint:unchecked" />
+      <module name="ch08-mr-types" options="-Xlint:unchecked" />
+      <module name="ch09-mr-features" options="-Xlint:unchecked" />
+      <module name="ch12-avro" options="-Xlint:unchecked" />
+      <module name="ch13-parquet" options="-Xlint:unchecked" />
+      <module name="ch15-sqoop" options="-Xlint:unchecked" />
+      <module name="ch16-pig" options="-Xlint:unchecked" />
+      <module name="ch17-hive" options="-Xlint:unchecked" />
+      <module name="ch18-crunch" options="-Xlint:unchecked" />
+      <module name="ch19-spark" options="-Xlint:unchecked" />
+      <module name="ch20-hbase" options="-Xlint:unchecked" />
+      <module name="ch21-zk" options="-Xlint:unchecked" />
+      <module name="ch22-case-studies" options="-Xlint:unchecked" />
+      <module name="common" options="-Xlint:unchecked" />
+      <module name="snippet" options="-Xlint:unchecked" />
+    </option>
+  </component>
+</project>

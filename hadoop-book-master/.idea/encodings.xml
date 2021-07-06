@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/ch02-mr-intro/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch03-hdfs/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch05-io/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch06-mr-dev/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch06-mr-dev/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch08-mr-types/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch09-mr-features/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch09-mr-features/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch12-avro/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch12-avro/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch13-parquet/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch15-sqoop/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch16-pig/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch17-hive/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch18-crunch/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch19-spark/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch20-hbase/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch21-zk/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ch22-case-studies/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
+  </component>
+</project>
