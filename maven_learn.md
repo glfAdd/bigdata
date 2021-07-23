@@ -1,3 +1,9 @@
+##### Maven jar 管理网站
+
+```
+https://mvnrepository.com/
+```
+
 ##### Maven仓库分类
 
 ```
@@ -11,6 +17,9 @@
 　　　　保存三方库（一方库指JDK，二方库指开发人员）框架或工具的jar包。
 　　　　保存自己开发的maven工程。
 　　　　即仓库保存的就是各种jar包。
+　　　　
+1. maven使用本地仓库存储的jar,所有项目都会公用仓库中的同一分jar
+2. 会自动引入所需的兼容版本jar
 ```
 
 ##### 安装
@@ -208,7 +217,7 @@ org\springframework\boot\spring-boot-starter-web\2.3.8.RELEASE\spring-boot-start
 - 在标签中，使用${自定义标签名}来引用
 
 ```xml
-perties>
+<properties>
     <jar.version>5.1.7.RELEASE</jar.version>
 </properties>
 <dependencies>
@@ -234,5 +243,26 @@ perties>
 创建一个父工程，并添加相关的非compile范围的依赖
 
 由于父工程一般只起到聚合子工程的作用，并无java代码，所以父工程创建时的打包方式需要选择 <packaging>pom</packaging>, POM是最简单的打包类型
+```
+
+## 标签说明
+
+```xml
+<project xmlns = "http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0
+    http://maven.apache.org/xsd/maven-4.0.0.xsd">
+ 
+    <!-- 模型版本 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 公司或者组织的唯一标志，并且配置时生成的路径也是由此生成， 如com.companyname.project-group，maven会将该项目打成的jar包放本地路径：/com/companyname/project-group -->
+    <groupId>com.companyname.project-group</groupId>
+ 
+    <!-- 项目的唯一ID，一个groupId下面可能多个项目，就是靠artifactId来区分的 -->
+    <artifactId>project</artifactId>
+ 
+    <!-- 工程的版本号. 在 artifact 的仓库中，它用来区分不同的版本 -->
+    <version>1.0</version>
+</project>
 ```
 

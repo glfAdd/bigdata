@@ -296,7 +296,7 @@ ResourceManager 也很消耗内存，不要和NameNode、SecondaryNameNode配置
 
 | 参数           | 说明                                                         |
 | -------------- | ------------------------------------------------------------ |
-| fs.defaultFS   | NameNode 的URI                                               |
+| fs.defaultFS   | 用于设置 hadoop 的默认文件系统, 由 URI 指定, HDFS 通过该属性确定 namenode 运行的主机和端口 |
 | hadoop.tmp.dir | Hadoop的默认临时路径. hadoop.tmp.dir是hadoop文件系统依赖的基础配置，很多路径都依赖它。它默认的位置是在/tmp/{$user}下面，但是在/tmp路径下的存储是不安全的，因为linux一次重启，文件就可能被删除 |
 
 
@@ -818,8 +818,8 @@ $ bin/mysqld --user=mysql  --initialize --basedir=/opt/mysql-8.0.25-linux-glibc2
 
 ##### 启动服务
 
-```
-$ /opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/bin/mysqld_safe --defaults-file=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/config/my.cnf &
+```bash
+/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/bin/mysqld_safe --defaults-file=/opt/mysql-8.0.25-linux-glibc2.17-x86_64-minimal/config/my.cnf &
 ```
 
 ##### 首次登录修改密码

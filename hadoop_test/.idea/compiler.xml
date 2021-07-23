@@ -6,8 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="hadoop_test" />
+        <module name="com.glfadd" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="com.glfadd" target="8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

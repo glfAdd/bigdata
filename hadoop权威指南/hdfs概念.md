@@ -144,11 +144,64 @@ $ hdfs fsck / -files -blocks
   STONITH 通过特定的供电原件使主机断电
   ```
 
-##### 123
+##### HDFS 文件权限
 
+```
+r
+w
+x 不能在 HDFS 中执行文件, 访问子目录需要这个权限
 
+owner 所属用户
+group 所属组
+mode 模式
+```
 
+##### hadoop 文件系统
 
+- Hadoop 以 java api 形式提供文件系统访问接口. 其他语言使用 WebHDFS 提供的 http rest api 访问 HDFS. http 接口比原生的 java 客户端慢
+
+- Hadoop 具有抽象文件系统概念, HDFS 只是其中一个实现
+
+- java 抽象类 org.apache.hadoop.fs.FileSystem 定义了 hadoop 客户端接口, 抽象类有多种实现
+
+  | 文件系统       | URI 方案 | java 实现                   | 说明                         |
+  | -------------- | -------- | --------------------------- | ---------------------------- |
+  | Local          | file     | fs.LocalFileSystem          | 使用客户端校验和本地磁盘系统 |
+  | HDFS           | hdfs     | hdfs.DistributedFileSystem  | hadoop 分布式文件系统        |
+  | WebHDFS        | Webhdfs  | hdfs.web.SWebHdfsFileSystem | 基于 http 的文件系统         |
+  | Secure WebHDFS | swebhdfs | hdfs.web.SWebHdfsFileSystem | 基于 https 文件系统          |
+  | HAR            | har      | fs.HarFileSystem            |                              |
+  | View           | viewfs   | viewfs.ViewFileSystem       |                              |
+  | FTP            | ftp      | fs.ftp.FTPFileSystem        | 由 FTP 支持的文件系统        |
+
+- 命令示例
+
+  ```bash
+  # 查看本地文件系统根目录文件(查看的是这台计算机)
+  $ hadoop fs -ls file:///
+  ```
+
+##### http 访问 HDFS 方式
+
+![http访问hdfs方式](./image/http访问hdfs方式.png)
+
+- 直接访问, HDFS 直接处理客户端请求
+
+  ```
+  1. namenode 和 datanode 中内嵌 web 服务作为 WebHDFS 的端节点
+  2. 元数据操作 namenode 处理, 文件读写 datanode 处理
+  3. dfs.webhdfs.enable 默认为 true 
+  ```
+
+- 通过代理访问, 客户端常用 DistributedFileSystem api 访问 HDFS
+
+  ```
+  1. 由于代理服务器无状态, 可以运行在标准的负载均衡之后
+  2. 使用代理服务器可以使用更严格的防火墙策略和带宽限制策略
+  3. 使用 httpfs.sh 启动代理服务, 默认端口 14000
+  ```
+
+  
 
 
 
