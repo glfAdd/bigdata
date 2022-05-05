@@ -22,7 +22,7 @@ https://mvnrepository.com/
 2. 会自动引入所需的兼容版本jar
 ```
 
-##### 安装
+##### 安装 - linux
 
 - 下载
 
@@ -78,6 +78,20 @@ mvn –v
 或
 mvn -version
 ```
+
+##### 安装 windws
+
+```
+# 1. 下载 apache-maven-3.8.5-bin.zip
+
+# 2. 设置环境变量
+	新建系统变量：MAVEN_HOME，复制Maven的路径
+	在系统变量：Path中复制粘贴：%MAVEN_HOME%\bin
+```
+
+![maven1](.\image\maven1.png)
+
+![maven2](.\image\maven2.png)
 
 ## idea创建新项目
 

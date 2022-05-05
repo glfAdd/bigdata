@@ -111,5 +111,18 @@ copyTolocal
 
 
 
+```
+namenode (nn)
+存储文件元数据, 如文件名, 文件目录结构, 文件属性(生成时间, 副本数, 权限), 以及每个文件的块列表和块所在的 datanode
+
+datanode (dn)
+存储文件块数据, 以及数据校验和
+
+secondary namenode (2nn)
+每隔一段时间对 namenode 备份
+
+
+```
+
 
 
